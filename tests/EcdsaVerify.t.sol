@@ -20,37 +20,29 @@ import {RiscZeroCheats} from "risc0/test/RiscZeroCheats.sol";
 import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 import {IRiscZeroVerifier} from "risc0/IRiscZeroVerifier.sol";
-import {EvenNumber} from "../contracts/EvenNumber.sol";
+import {EcdsaVerify} from "../contracts/EcdsaVerify.sol";
 import {Elf} from "./Elf.sol"; // auto-generated contract after running `cargo build`.
 
 contract EvenNumberTest is RiscZeroCheats, Test {
-    EvenNumber public evenNumber;
+    EcdsaVerify public ecdsaVerify;
 
     function setUp() public {
         IRiscZeroVerifier verifier = deployRiscZeroVerifier();
-        evenNumber = new EvenNumber(verifier);
-        assertEq(evenNumber.get(), 0);
+        ecdsaVerify = new EcdsaVerify(verifier);
+        assertEq(ecdsaVerify.get(), false);
     }
 
-    function test_SetEven() public {
-        uint256 number = 12345678;
-        (bytes memory journal, bytes memory seal) = prove(
-            Elf.IS_EVEN_PATH,
-            abi.encode(number)
+    function test_SetValid() public {
+        uint256 msgHash = 0xd8a326473d017c4b8ed203ae4c7f9f596beb93f778e9a9190121f8c67c7926db;
+        uint256 sigR = 0x151a57a7e03dd176ca7ff63a6619ec609ef5a96b52a3944d9524b1fded517e0d;
+        uint256 sigS = 0x276953b4f52b401143846fb665b30bccba456c7eacc9b28dfd00e2d472e51360;
+        uint256 pubKey = 0x39a3b9db34166ba7957fe9b28b4d47eb77a5a6db2a7d0167b36a61828145eafb;
+        (, bytes memory seal) = prove(
+            Elf.ECDSA_VERIFY_PATH,
+            abi.encode(msgHash, sigS, sigR, pubKey)
         );
 
-        evenNumber.set(abi.decode(journal, (uint256)), seal);
-        assertEq(evenNumber.get(), number);
-    }
-
-    function test_SetZero() public {
-        uint256 number = 0;
-        (bytes memory journal, bytes memory seal) = prove(
-            Elf.IS_EVEN_PATH,
-            abi.encode(number)
-        );
-
-        evenNumber.set(abi.decode(journal, (uint256)), seal);
-        assertEq(evenNumber.get(), number);
+        ecdsaVerify.set(msgHash, sigS, sigR, pubKey, seal);
+        assertEq(ecdsaVerify.get(), true);
     }
 }

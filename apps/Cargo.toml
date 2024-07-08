@@ -4,6 +4,10 @@ version = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
+iamgroot = { git = "https://github.com/sergey-melnychuk/iamgroot", tag = "v0.2.8" }
+starknet-crypto = "0.6.2"
+k256 = { version = "0.13", features = ["serde"] }
+rand_core = "0.6.4"
 alloy-primitives = { workspace = true }
 alloy-sol-types = { workspace = true }
 anyhow = { workspace = true }
